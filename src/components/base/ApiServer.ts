@@ -1,4 +1,4 @@
-import { Api, ApiListResponse } from '../base/Api';
+import { Api, ApiListResponse } from './Api';
 import { 
     IApiS, 
     ApiProduct, 

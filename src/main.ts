@@ -1,6 +1,6 @@
 import './scss/styles.scss';
 import { EventEmitter } from './components/base/events.ts';
-import { ApiServ } from './components/api/APIServer.ts';
+import { ApiServ } from './components/base/ApiServer.ts';
 import { CatalogModel } from './components/models/Catalog';
 import { BasketModel } from './components/models/Basket';
 import { OrderModel } from './components/models/Order';
