@@ -1,29 +1,28 @@
-import { API_URL } from '../../utils/constants';
+export interface ApiListResponse<T> {
+    total: number;
+    items: T[];
+}
 
-export class Api {
-  constructor(private baseUrl: string = API_URL) {}
+export abstract class Api {
+    constructor(protected baseUrl: string, protected options?: RequestInit) {}
 
-  private handleResponse(res: Response) {
-    if (!res.ok) {
-      return res.json().then(err => {
-        throw new Error(JSON.stringify(err));
-      });
+    protected get<T>(path: string): Promise<T> {
+        return fetch(this.baseUrl + path, { ...this.options })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                return res.json() as Promise<T>;
+            });
     }
-    return res.json();
-  }
 
-  // Generic метод get
-  get<T>(endpoint: string): Promise<T> {
-    return fetch(`${this.baseUrl}${endpoint}`)
-      .then(res => this.handleResponse(res));
-  }
-
-  // Generic метод post
-  post<T>(endpoint: string, data: object): Promise<T> {
-    return fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(res => this.handleResponse(res));
-  }
+    protected post<T>(path: string, body: any): Promise<T> {
+        return fetch(this.baseUrl + path, {
+            ...this.options,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(res => {
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            return res.json() as Promise<T>;
+        });
+    }
 }

@@ -2,11 +2,11 @@ export function pascalToKebab(value: string): string {
     return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
-export function isSelector(x: any): x is string {
+export function isSelector(x: unknown): x is string {
     return (typeof x === "string") && x.length > 1;
 }
 
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
     return value === null || value === undefined;
 }
 
@@ -46,13 +46,14 @@ export function ensureElement<T extends HTMLElement>(selectorElement: SelectorEl
 
 export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplateElement): T {
     const template = ensureElement(query) as HTMLTemplateElement;
-    if (!template.content.firstElementChild) {
+    const first = template.content.firstElementChild;
+    if (!first) {
         throw new Error(`Template ${query} has no content`);
     }
-    return template.content.firstElementChild.cloneNode(true) as T;
+    return first.cloneNode(true) as T;
 }
 
-export function bem(block: string, element?: string, modifier?: string): { name: string, class: string } {
+export function bem(block: string, element?: string, modifier?: string): { name: string; class: string } {
     let name = block;
     if (element) name += `__${element}`;
     if (modifier) name += `_${modifier}`;
@@ -69,7 +70,7 @@ export function getObjectProperties(obj: object, filter?: (name: string, prop: P
         )
     )
         .filter(([name, prop]: [string, PropertyDescriptor]) => filter ? filter(name, prop) : (name !== 'constructor'))
-        .map(([name,]) => name);
+        .map(([name]) => name);
 }
 
 /**
@@ -84,10 +85,16 @@ export function setElementData<T extends Record<string, unknown> | object>(el: H
 /**
  * Получает типизированные данные из dataset атрибутов элемента
  */
-export function getElementData<T extends Record<string, unknown>>(el: HTMLElement, scheme: Record<string, Function>): T {
+export function getElementData<T extends Record<string, unknown>>(
+    el: HTMLElement,
+    scheme: Record<string, (value: string) => unknown>
+): T {
     const data: Partial<T> = {};
-    for (const key in el.dataset) {
-        data[key as keyof T] = scheme[key](el.dataset[key]);
+    for (const key in scheme) {
+        const raw = el.dataset[key];
+        if (raw !== undefined) {
+            data[key as keyof T] = scheme[key](raw) as T[keyof T];
+        }
     }
     return data as T;
 }
@@ -135,4 +142,14 @@ export function createElement<
         }
     }
     return element;
+}
+
+/**
+ * Форматирование цены
+ */
+export function formatPrice(price: number | null): string {
+    if (price === null) {
+        return '';
+    }
+    return price.toString();
 }

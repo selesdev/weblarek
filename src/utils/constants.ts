@@ -16,6 +16,17 @@ export const categoryMap = {
   'другое': 'card__category_other',
 };
 
+export const selectors = {
+  cardCatalog: '#card-catalog',
+  cardPreview: '#card-preview',
+  cardBasket: '#card-basket',
+  basket: '#basket',
+  order: '#order',
+  contacts: '#contacts',
+  success: '#success'
+};
+
+
 export const settings = {
 
 };

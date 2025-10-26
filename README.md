@@ -98,95 +98,123 @@ Presenter - презентер содержит основную логику п
 `emit<T extends object>(event: string, data?: T): void` - инициализация события. При вызове события в метод передается название события и объект с данными, который будет использован как аргумент для вызова обработчика.  
 `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие с передачей в него данных из второго параметра.
 
-##### Данные
-В ходе анализа полученных данных и в соответсвии ТЗ было принято решение о внедреннии двух интерфейсов 
-1. Iproduct Интерфейс описывает структуру данных товара, которые приходят с сервера и используются в приложении для отображения карточек товаров, их детальной информации и работы корзины., в нём будут храниться следующие данные: id (по которому будут определяться что это за товар), title (название), image (изображение товара), category (категория товара), price (цена), description (описание товара). Форматы: id - string; title - string; image - string; category - string; price - number|null; description - string;
-2. IBuyer Интерфейс описывает структуру данных покупателя, которые приходят с сервера и используются в приложении при оформлении заказа, в нём будут храниться следующие данные: payment (способ оплаты), email (электронная почта), phone (номер телефона), address(адресс). Форматы: payment: - TPayment(cash|card); email - string; phone - string; address - string;
-
-###### Модели данных
-Класс Folder, хранит массив товаров, доступных для покупки и работы с выбранными товарами.
-Поля: items:IProduct[]-массив всех товаров, selectedItem: IProduct - товар, выбранный для дальнейшего действия. 
-Методы: setItems(items: IProduct[]): void - сохранение массива товаров полученного в параметрах метода; getItems(): IProduct[] - получение массива товаров из модели; getItemById(id: string): IProduct  - получение одного товара по его id; setSelectedItem(item: IProduct): void - сохранение товара для подробного отображения; getSelectedItem(): IProduct | null - получение товара для подробного отображения.
-
-Класс Cart, хранит массив товаров, выбранных покупателем для покупки.
-Поля: items:IProduct[] - массив товаров, добавленных в корзину. 
-Методы: getItems(): IProduct[] - получение массива товаров, которые находятся в корзине; addItem(item: IProduct): void - добавление товара, который был получен в параметре, в массив корзины;
-removeItem(item: IProduct): void - удаление товара, полученного в параметре из массива корзины;
-clear(): void - очистка корзины;
-getTotalPrice(): number - получение стоимости всех товаров в корзине;
-getCount():number - получение количества товаров в корзине;
-hasItem(id: string): boolean - проверка наличия товара в корзине по его id, полученного в параметр метода.
-
-Класс Buyer, хранит данные покупателя, которые используются при покупке + валидация.
-Поля: TPayment(cash|card); email - string; phone - string; address - string;
-Методы: setData(data: Partial<IBuyer>): void - сохраняет данные покупателя (есть возможность сохранить только один вариант телефон/почту); getData(): IBuyer - получение всех данных покупателя;
-clear(): void - очищение данных покупателя; validate(): Record<string, string> - валидация данных;
-
-###### Слой коммункации 
-Вводится класс ApiServer. Данный класс будет представителем коммуникационного слоя, он будет отвечать за получение данных с сервера и отправку данных на сервер. Класс будет использовать композицию, чтобы выполнить запрос на сервер с помощью метода get и будет получать с сервера объект с массивом товаров.
-Поля: api:Api - string;
-Методы: getProducts():IProduct[] - get запрос на product; sendOrder(buyerData: IBuyer, items: IProduct[]): void - выполняет post запрос на order; 
+Классы ApiServ
+Класс для работы с сервером (API).
+Поля: cdn: string – базовый URL для изображений
+Методы: getProduct(id: string): Promise<ApiProduct> – получить товар по ID; getProductList(): Promise<ApiProduct[]> – получить список товаров; orderProducts(order: ApiOrderRequest): Promise<ApiOrderResponse> – отправить заказ
+Интерфейсы API
+IApi
+Общий интерфейс для работы с HTTP-запросами.
+Поля и методы: baseUrl: string – базовый URL; get<T>(uri: string): Promise<T> – GET-запрос; post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T> – POST/PUT/DELETE-запрос
+IApiS
+Интерфейс для сервиса с бизнес-логикой работы с товарами и заказами.
+Методы: getProductList(): Promise<ApiProduct[]>; getProduct(id: string): Promise<ApiProduct>; orderProducts(order: ApiOrderRequest): Promise<ApiOrderResponse>
+Модели данных
+ApiProduct
+Структура данных товара с сервера.
+Поля: id: string; title: string; description: string; price: number | null; image: string; category: ProductCategory
+ApiOrderRequest
+Данные для создания заказа.
+Поля: payment: PaymentMethod; email: string; phone: string; address: string; total: number; items: string[] – массив ID товаро
+ApiOrderResponse
+Ответ сервера после создания заказа.
+Поля: id: string; total: number; 
+ApiError
+Ошибка API.
+Поля: error: string; message?: string;
+Корзина IBasketItem
+Товар в корзине.
+Поля: product: IProduct; quantity: number;
+IBasket
+Состояние корзины.
+Поля items: IBasketItem[]; total: number; count: number;
+IBasketModel
+Методы работы с корзиной.
+Поля: items: Map<string, IBasketItem>
+Методы: add(product: IProduct): void; remove(productId: string): void; clear(): void; getTotal(): number; getCount(): number; getItems(): IBasketItem[]; contains(productId: string): boolean;
+IBasketView / IBasketItemView
+Интерфейсы для отображения корзины и товаров в ней.
+Методы: render(...); updateCounter(count: number) (только для корзины)
+Заказ IOrder
+Данные заказа.
+Поля: payment?: PaymentMethod; email?: string; phone?: string; address?: string; items: IBasketItem[]; total: number;
+IOrderModel Методы работы с заказом.
+Методы: setPayment(payment: PaymentMethod): void; setEmail(email: string): void; setPhone(phone: string): void; setAddress(address: string): void; validateOrder(): boolean; validateContacts(): boolean; clear(): void; getOrderData(items: IBasketItem[], total: number): IOrder; getOrderErrors(): string[]; getContactsErrors(): string[]; getErrors(): string[];;
+IOrderForm / IContactsForm / IOrderResult
+Формы и результат заказа.
+Товары IProduct
+Структура товара.
+Поля: id: string; title: string; description: string; price: number | null; image: string; category: ProductCategory;
+IProductView
+Представление товара в UI.
+Поля: id, title, description?, price, image, category; button?: { text: string; disabled: boolean }
+ICatalog / ICatalogModel / ICatalogView
+Каталог товаров и методы для работы с ним.
+События
+IEvents
+Интерфейс системы событий.
+Методы: on, emit, off, trigger, onAll, offAll
+AppEvent
+События приложения: ProductSelected, ProductAddedToBasket, BasketChanged, OrderSubmitted, OrderCompleted, ModalOpened, FormValidated и др.
+Views
+IComponent / IEventComponent
+UI-компоненты.
+Методы: render(data?: unknown); events: IEvents (только IEventComponent); IModalView / IFormView / IPageView
+Интерфейсы для модальных окон, форм и страниц.
 
 ###### Классы
+1. Component — базовый абстрактный компонент
+Назначение: Основной класс представления. Базовый класс для всех визуальных компонентов, определяет общий интерфейс и методы рендера.
+Поля:protected container: HTMLElement — корневой HTML-элемент компонента.
+Методы: render(data?: Partial<T>): HTMLElement — возвращает корневой элемент, обновляя состояние; toggleClass(element, className, force?) — переключает CSS-класс; setText(element, value) — обновляет текст; setElementDisabled(element, state) — делает элемент активным/неактивным; setHidden(element) / setVisible(element) — скрытие/отображение; setImage(element, src, alt?) — установка изображения.
+События: Не генерирует напрямую.
 
-Component - основной класс представления
-Базовый абстрактный класс для всех визуальных компонентов. Определяет общий интерфейс и базовые методы рендера.
-Поля:protected element: HTMLElement — корневой HTML-элемент компонента.
-Методы: render(): HTMLElement — возвращает корневой элемент; setEventListeners(): void — назначает слушатели событий; remove(): void — удаляет элемент из DOM.
-События: Не генерирует напрямую, но служит основой для компонентов, которые их создают.
+2. Card — карточка товара
+Назначение: Отображает данные о товаре: название, цену, изображение, категорию, кнопки.
+Поля: id: string, title: string, image: string, description: string, category: string, price: string, index: number_button: HTMLButtonElement — кнопка действия.
+Методы: render(): HTMLElement — отрисовывает карточку;set button({text, disabled}) — управляет кнопкой,
+События: через переданный onClick для кнопки или карточки.
 
-2. CardView — базовый класс карточки товара
-Назначение: Отображает общие элементы карточки (название, цена, изображение, кнопки).
-Поля: item: IProduct — данные о товаре; element: HTMLElement — HTML-элемент карточки; button: HTMLButtonElement — кнопка действия («Купить», «Удалить», «Недоступно»).
-Методы: render(): HTMLElement — отрисовывает карточку товара. updateButtonState(): void — обновляет надпись и состояние кнопки (активна, неактивна). setEventListeners(): void — добавляет слушатели: клик по карточке — card:open; клик по кнопке «Купить» — card:add; клик по кнопке «Удалить» — card:remove.
-События: card:open — открытие модального окна с описанием товара; card:add — добавление товара в корзину; card:remove — удаление товара из корзины.
+3. Basket — корзина
+Назначение: Отображает список выбранных товаров и общую сумму.
+Поля: items: HTMLElement[] — элементы товаров; total: number — сумма; selected: boolean — доступность кнопки «Оформить».
+Методы: set items(value) — обновляет список товаров; set total(value) — обновляет сумму; set selected(value) — включает/выключает кнопку оформления.
+События: order:open — пользователь открыл оформление заказа.
 
-3. Дочерние карточки товаров
-Все три класса наследуются от CardView, но используют разные шаблоны в зависимости от категории товара (по макету):
-CardSmallView
-Назначение: карточка в виде плитки для каталога (основная галерея).
-Методы: переопределяет render() для шаблона каталога.
-CardLargeView
-Назначение: карточка в виде детального просмотра в модальном окне.
-Методы: переопределяет render() для крупного изображения и описания.
-CardCartView
-Назначение: карточка товара внутри корзины.
-Методы: переопределяет render() для отображения цены и кнопки удаления.
+4. Form — базовый класс форм
+Назначение: Универсальная форма с валидацией.
+Поля: valid: boolean — состояние валидности формы; errors: string — ошибки.
+Методы: getData(): Record<string, string> — возвращает данные формы; validate(): boolean — проверяет корректность; render(state) — обновляет форму.
+События: ${formName}:submit — форма отправлена; ${formName}:change — изменение поля/
 
-4. ModalView — модальное окно
-Назначение:Универсальный компонент модальных окон. Отображает переданный контент и управляет его открытием и закрытием.
-Поля: container: HTMLElement — контейнер модального окна;content: HTMLElement | null — текущий контент.
-Методы:open(content: HTMLElement): void — открывает окно с контентом. close(): void — закрывает окно; setEventListeners(): void — добавляет обработчики: клик по фону или кнопке крестика — modal:close.
-События: modal:close — окно закрыто пользователем.
+5. ContactsForm — форма контактов
+Назначение: Форма для ввода email и телефона.
+Наследует: Form
+Поля: email: string; phone: string.
+Методы: геттеры и сеттеры для полей email и phone.
+События: унаследованы от Form.
 
-5. CartView — корзина
-Назначение:Отображает список выбранных товаров и общую сумму заказа.
-Поля: items: IProduct[] — товары в корзине; element: HTMLElement — контейнер корзины; totalPrice: number — сумма заказа.
-Методы: render(): HTMLElement — отображает список карточек товаров; updateTotal(): void — пересчитывает и обновляет общую сумму. setEventListeners(): void — слушатели: удаление товара — cart:remove; оформление покупки — cart:checkout.
-События:cart:remove — пользователь удалил товар;cart:checkout — переход к оформлению заказа.
+6. OrderForm — форма заказа
+Назначение: Первая форма оформления заказа: выбор оплаты и адреса.
+Наследует: Form
+Поля: _payment: HTMLButtonElement[] — кнопки способов оплаты; address: string — адрес доставки
+Методы: set payment(value) — выбор оплаты; setPaymentMethod(method) — визуальное выделение выбранного метода
+События: order:payment-change — изменение оплаты
 
-6. FormView — базовый класс форм
-Назначение: Базовый компонент для всех форм оформления заказа.
-Поля: form: HTMLFormElement fields: Record<string, HTMLInputElement> errors: Record<string, string>
-Методы: getData(): Record<string, string> — возвращает введённые данные;
-validate(): boolean — проверяет корректность введённых данных; setEventListeners(): void — обрабатывает отправку формы; render(): HTMLElement — возвращает форму.
-События: form:submit — форма успешно отправлена; form:invalid — ошибки при валидации.
+7. Modal — модальное окно
+Назначение: Универсальный компонент для модальных окон.
+Поля: content: HTMLElement | null — текущий контент; _closeButton: HTMLButtonElement — кнопка закрытия
+Методы: open(): void — открыть окно; close(): void — закрыть окно; render(data) — открыть окно с контентом
+События: modal:open, modal:close
 
-7. OrderPaymentFormView — форма выбора оплаты и адреса доставки
-Назначение: Первая форма оформления заказа.
-Наследует: FormView 
-Поля: payment: string — выбранный способ оплаты; address: string — адрес доставки.
-Методы:validate(): boolean — проверка выбора оплаты и заполнения адреса; render() — возвращает форму с радиокнопками и полем ввода адреса.
-События:form:next — переход ко второму шагу.
+8. Page — страница
+Назначение: Главный контейнер страницы с каталогом и корзиной.
+Поля: counter: number — количество товаров в корзине; catalog: HTMLElement[] — список карточек; locked: boolean — блокировка страницы
+Методы: showCatalog(items) — отображение каталога; updateCounter(value) — обновление счётчика
+События: basket:open — открытие корзины
 
-8. OrderContactsFormView — форма с контактными данными покупателя
-Назначение: Вторая форма оформления заказа (ввод почты и телефона).
-Наследует: FormView
-Поля: email: string, phone: string
-Методы: validate(): boolean — проверка корректности email и телефона, render() — отрисовка формы.
-События:form:submit — успешное оформление заказа.
-
-9. AppView — главный компонент страницы
-Назначение:Отвечает за сборку интерфейса: каталог, корзину, модалки, формы.
-Поля:gallery: HTMLElement — контейнер для каталога; modal: ModalView — экземпляр модального окна;cart: CartView — экземпляр корзины.
-Методы:showCatalog(items: IProduct[]): void — отрисовывает каталог; showModal(content: HTMLElement): void — показывает контент в модалке; updateCart(items: IProduct[]): void — обновляет состояние корзины.
+9. Success — окно успешного заказа
+Назначение: Показ успешного оформления заказа и суммы.
+Поля: total: number — списанная сумма
+Методы: render() — отрисовка окна
+События: через переданный onClick для закрытия

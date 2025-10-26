@@ -1,32 +1,30 @@
-export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
-export type TPayment = 'cash' | 'card';
-
-export interface IApi {
-    get<T extends object>(uri: string): Promise<T>;
-    post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
+export * from './api';
+export * from './events';
+export * from './product';
+export * from './basket';
+export * from './order';
+export * from './views';
+export type Nullable<T> = T | null;
+export type Optional<T> = T | undefined;
+export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
+export interface ValidationRule<T = unknown> {
+    required?: boolean;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: RegExp;
+    validate?: (value: T) => boolean | string;
 }
-
-export interface IProduct {
-  id: string;
-  description: string;
-  image: string;
-  title: string;
-  category: string;
-  price: number | null;
-}
-
-export interface IBuyer {
-  payment: TPayment;
-  email: string;
-  phone: string;
-  address: string;
-}
-
-export type TProduct = {
-    items: IProduct[];
-}
-
-export type TOrder = {
-    buyer: IBuyer;
-    items: IProduct[];
+export type ValidationRules<T> = Partial<Record<keyof T, ValidationRule>>;
+export interface AppState {
+    catalog: {
+        products: import('./product').IProduct[];
+        loading: boolean;
+        error?: string;
+    };
+    basket: import('./basket').IBasket;
+    order: import('./order').IOrder;
+    modal: {
+        isOpen: boolean;
+        content?: HTMLElement;
+    };
 }
