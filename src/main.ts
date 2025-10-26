@@ -1,37 +1,68 @@
 import './scss/styles.scss';
+import { IProduct } from './types';
+import { CartView } from './components/base/models/views/CartView';
+import { CardSmallView } from './components/base/models/views/CardSmallView';
+import { CardLargeView } from './components/base/models/views/CardLargeView';
+import { ModalView } from './components/base/models/views/ModalView';
 
-import { Folder } from './components/base/models/Folder';
-import { Cart } from './components/base/models/Cart';
-import { Buyer } from './components/base/models/Buyer';
-import { apiProducts } from './utils/data';
-import { Api } from './components/base/Api';
-import { ApiServer } from './components/base/models/ApiServer';
-import {API_URL} from '../src/utils/constants';
+// --- Мок-данные для каталога ---
+const mockProducts: IProduct[] = [
+  { id: '1', title: 'Товар 1', description: 'Описание 1', image: 'img1.jpg', category: 'софт-скил', price: 100 },
+  { id: '2', title: 'Товар 2', description: 'Описание 2', image: 'img2.jpg', category: 'хард-скил', price: 200 },
+  { id: '3', title: 'Товар 3', description: 'Описание 3', image: 'img3.jpg', category: 'другое', price: 300 },
+];
 
-const folderModel = new Folder();
-folderModel.setItems(apiProducts.items);
-console.log('Массив товаров: ', folderModel.getItems());
-console.log('Один товар: ', folderModel.getItemById('854cef69-976d-4c2a-a18c-2aa45046c390'));
+// --- Инициализация модалки и корзины ---
+const modalView = new ModalView('.modal');
+const cartView = new CartView('.cart-list');
 
-const cart = new Cart();
-cart.addItem(apiProducts.items[0]);
-cart.addItem(apiProducts.items[1]);
-console.log('Корзина: ', cart.getItems());
-console.log('Итого: ', cart.getTotalPrice());
+let cartItems: IProduct[] = [];
 
-const buyer = new Buyer();
-buyer.setData({ email: 'test@test.ru' });
-console.log('Данные покупателя: ', buyer.getData());
-console.log('Ошибки валидации: ', buyer.validate());
+// --- Функция рендера каталога ---
+function renderCatalog(products: IProduct[]) {
+  const gallery = document.querySelector('.gallery')!;
+  gallery.innerHTML = '';
 
-const api = new Api(API_URL);
-const apiServer = new ApiServer(api);
+  products.forEach(product => {
+    const card = new CardSmallView(product);
+    const node = card.render();
 
-apiServer.getProducts()
-  .then((products) => {
-    folderModel.setItems(products);
-    console.log('Массив товаров (с сервера): ', folderModel.getItems());
-  })
-  .catch((err) => {
-    console.error('Ошибка загрузки каталога:', err);
+    card.setEventListeners(
+      (p) => { // добавить в корзину
+        cartItems.push(p);
+        cartView.update(cartItems);
+        updateCartCounter();
+      },
+      (p) => { // открыть модалку
+        const largeCard = new CardLargeView(p);
+        modalView.open(largeCard.render());
+      }
+    );
+
+    gallery.appendChild(node);
   });
+}
+
+// --- Обновление счётчика корзины ---
+function updateCartCounter() {
+  const counter = document.querySelector('.header__basket-counter')!;
+  counter.textContent = cartItems.length.toString();
+}
+
+// --- Событие удаления из корзины ---
+document.addEventListener('cart:remove', (ev: Event) => {
+  const item = (ev as CustomEvent<IProduct>).detail;
+  cartItems = cartItems.filter(p => p.id !== item.id);
+  cartView.update(cartItems);
+  updateCartCounter();
+});
+
+// --- Кнопка открытия корзины ---
+document.querySelector('.header__basket')?.addEventListener('click', () => {
+  modalView.open(cartView.getContent());
+});
+
+// --- Рендерим каталог с мок-данными ---
+document.addEventListener('DOMContentLoaded', () => {
+  renderCatalog(mockProducts);
+});

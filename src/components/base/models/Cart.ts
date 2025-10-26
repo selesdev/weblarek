@@ -1,22 +1,26 @@
 import { IProduct } from "../../../types";
+import { Model } from "./Model";
 
-export class Cart {
+export class Cart extends Model<IProduct[]> {
   private items: IProduct[] = [];
-
-  getItems(): IProduct[] {
-    return this.items;
-  }
 
   addItem(item: IProduct): void {
     this.items.push(item);
+    this.emit('cart:change', this.items);
   }
 
   removeItem(item: IProduct): void {
     this.items = this.items.filter(i => i.id !== item.id);
+    this.emit('cart:change', this.items);
   }
 
   clear(): void {
     this.items = [];
+    this.emit('cart:clear');
+  }
+
+  getItems(): IProduct[] {
+    return this.items;
   }
 
   getTotalPrice(): number {
