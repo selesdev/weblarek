@@ -6,7 +6,15 @@ type EmitterEvent = {
     eventName: string, 
     data: unknown 
 }; 
- 
+
+export interface AppEvents {
+  'card:click': { element: HTMLElement };
+  'form:submit': { form: HTMLFormElement };
+  'header:cart-open': void;
+  'success:open': string | undefined;
+  'success:close': void;
+}
+
 export interface IEvents { 
     on<T extends object>(event: EventName, callback: (data: T) => void): void; 
     emit<T extends object>(event: string, data?: T): void; 

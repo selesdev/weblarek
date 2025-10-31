@@ -1,5 +1,6 @@
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE'; 
 export type TPayment = 'cash' | 'card'; 
+export type TOrderItem = Pick<IProduct, 'id' | 'title' | 'price'>;
  
 export interface IApi { 
     get<T extends object>(uri: string): Promise<T>; 
@@ -27,7 +28,7 @@ export type TProduct = {
 } 
  
 export type TOrder = { 
-    buyer: IBuyer; 
-    items: IProduct[]; 
+     buyer: IBuyer;
+  items: TOrderItem[];
 } 
  
