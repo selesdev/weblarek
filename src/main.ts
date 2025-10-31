@@ -198,7 +198,6 @@ events.on('form:submit', async ({ form }: { form: HTMLFormElement }) => {
 		const total = items.reduce((s, i) => s + (i.price ?? 0), 0);
 
 		const order = { payment, email, phone, address, total, items };
-		console.log('Отправка заказа:', order);
 
 		try {
 			const res = await fetch(`${API_URL}/order`, {
@@ -222,22 +221,24 @@ events.on('form:submit', async ({ form }: { form: HTMLFormElement }) => {
 });
 
 async function loadProducts() {
-	try {
-		const res = await fetch(`${API_URL}/product`);
-		if (!res.ok) throw new Error('Ошибка при загрузке продуктов');
-		const data = await res.json();
-		const products: IProduct[] = Array.isArray(data.items) ? data.items : [];
+  try {
+    const res = await fetch(`${API_URL}/product`);
+    if (!res.ok) throw new Error('Ошибка при загрузке продуктов');
+    const data = await res.json();
 
-		products.forEach(p => {
-			p.id = normalizeId(p.id);
-			if (p.image) {
-				p.image = `${CDN_URL}/${p.image.replace(/^\/+/, '')}`;
-			}
-		});
+    const items = Array.isArray(data.items) ? data.items : data;
+    const products: IProduct[] = items.map((p: any) => ({
+      id: typeof p.id === 'object' && p.id.$oid ? p.id.$oid : String(p.id),
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      price: p.price,
+      image: p.image ? `${CDN_URL}/${p.image.replace(/^\/+/, '')}` : '',
+    }));
 
-		model.setProducts(products);
-	} catch (e) {
-		console.error(e);
-	}
+    model.setProducts(products);
+  } catch (err) {
+    console.error(err);
+  }
 }
 loadProducts();
