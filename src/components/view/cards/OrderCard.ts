@@ -20,8 +20,12 @@ export class OrderCard extends Component<HTMLElement> {
     this._form.addEventListener('submit', this._handleSubmit.bind(this));
     this._paymentButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
-        this._paymentButtons.forEach((b) => b.classList.remove('button_active'));
+        this._paymentButtons.forEach((b) => {
+          b.classList.remove('button_active');
+          b.classList.remove('button_alt-active');
+        });
         btn.classList.add('button_active');
+        btn.classList.add('button_alt-active');
         this._checkFormValidity();
       });
     });
@@ -32,7 +36,7 @@ export class OrderCard extends Component<HTMLElement> {
   protected _handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     const selectedPayment = Array.from(this._paymentButtons).find((btn) =>
-      btn.classList.contains('button_active')
+      btn.classList.contains('button_active') || btn.classList.contains('button_alt-active')
     )?.name;
 
     this._events.emit('order:submit', {
@@ -43,7 +47,9 @@ export class OrderCard extends Component<HTMLElement> {
 
   protected _checkFormValidity() {
     const isValid = this._addressInput.value.trim() !== '' &&
-      Array.from(this._paymentButtons).some((btn) => btn.classList.contains('button_active'));
+      Array.from(this._paymentButtons).some((btn) =>
+        btn.classList.contains('button_active') || btn.classList.contains('button_alt-active')
+      );
     this._submitButton.disabled = !isValid;
   }
 

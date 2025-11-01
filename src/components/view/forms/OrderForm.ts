@@ -61,7 +61,9 @@ export class OrderForm extends Form {
 
   private updatePaymentButtons():void {
     this.paymentButtons.forEach(button => {
-      button.classList.toggle('button_active', button.name === this.currentPayment);
+      const isActive = button.name === this.currentPayment;
+      button.classList.toggle('button_active', isActive);
+      button.classList.toggle('button_alt-active', isActive);
     });
   }
 

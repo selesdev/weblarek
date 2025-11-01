@@ -41,7 +41,10 @@ export class CatalogModel {
   addToBasket(product: IProduct): void {
     if (this.cart.hasItem(product.id)) {
       return;
-    }}
+    }
+    this.cart.addItem(product);
+    this.emitBasketChanges();
+  }
  
   removeFromBasket(index: number):void {
     this.cart.removeItemByIndex(index);
