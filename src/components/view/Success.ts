@@ -1,48 +1,25 @@
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/events';
-import { cloneTemplate } from '../../utils/utils';
+import { EventEmitter } from '../base/Events';
+import { selectors } from '../../utils/constants';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
 
 export class Success extends Component<HTMLElement> {
-  protected _events: EventEmitter;
+  private readonly events: EventEmitter;
+  private readonly description: HTMLElement;
+  private readonly closeButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
-    super(container);
-    this._events = events;
+  constructor(events: EventEmitter) {
+    const template = ensureElement<HTMLTemplateElement>(selectors.success);
+    super(cloneTemplate<HTMLElement>(template));
+    this.events = events;
+    this.description = this.container.querySelector('.order-success__description') as HTMLElement;
+    this.closeButton = this.container.querySelector('.order-success__close') as HTMLButtonElement;
+    this.closeButton.addEventListener('click', () => {
+      this.events.emit('success:close');
+  });
   }
 
-  open(message?: string) {
-    const modalContent = this.container.querySelector('.modal__content') as HTMLElement;
-    if (!modalContent) return;
-
-    modalContent.innerHTML = '';
-
-    const template = cloneTemplate<HTMLElement>('#success');
-    modalContent.appendChild(template);
-
-    const desc = modalContent.querySelector('.order-success__description') as HTMLElement | null;
-    const btn = modalContent.querySelector('.order-success__close') as HTMLButtonElement | null;
-
-    if (desc && message) desc.textContent = message;
-    if (btn) {
-      btn.addEventListener('click', () => {
-        modalContent.innerHTML = '';
-        this.container.classList.remove('modal_active');
-        this._events.emit('success:close');
-      });
-    }
-
-    this.container.classList.add('modal_active');
-    this._events.emit('success:open');
-  }
-
-  close() {
-    const modalContent = this.container.querySelector('.modal__content') as HTMLElement;
-    if (modalContent) modalContent.innerHTML = '';
-    this.container.classList.remove('modal_active');
-    this._events.emit('success:close');
-  }
-
-  render(): HTMLElement {
-    return this.container;
+ setMessage(message: string) {
+    this.description.textContent = message;
   }
 }

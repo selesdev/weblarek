@@ -1,5 +1,5 @@
 import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/events';
+import { EventEmitter } from '../../base/Events';
 
 export class OrderCard extends Component<HTMLElement> {
   protected _events: EventEmitter;

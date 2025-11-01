@@ -1,27 +1,33 @@
-import { Component } from '../../../components/base/Component';
-import { EventEmitter } from '../../../components/base/events';
+import { Component } from '../../base/Component';
+import { EventEmitter } from '../../base/Events';
 
-export class Form<T> extends Component<T> {
-	protected _form: HTMLFormElement;
-	protected _submitButton: HTMLButtonElement;
-	protected _events: EventEmitter;
+export abstract class Form extends Component<HTMLFormElement> {
+  protected readonly events: EventEmitter;
+  protected readonly submitButton: HTMLButtonElement;
+  protected readonly errorField: HTMLElement | null;
 
-	constructor(form: HTMLFormElement, events: EventEmitter) {
-  super(form); 
-  this._events = events;
-  this._form = form;
-  this._submitButton = form.querySelector('[type="submit"]') as HTMLButtonElement;
+	constructor(container: HTMLFormElement, events: EventEmitter) {
+    super(container);
+    this.events = events;
+    this.submitButton = this.container.querySelector('[type="submit"]') as HTMLButtonElement;
+    this.errorField = this.container.querySelector('.form__errors');
+  this.container.addEventListener('submit', (event) => {
+      event.preventDefault();
+      this.onSubmit();
+    });
+  }
 
-  this._handleSubmit = this._handleSubmit.bind(this);
-  this._form.addEventListener('submit', this._handleSubmit);
-}
+  protected abstract onSubmit(): void;
 
-	protected _handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
-		this._events.emit('form:submit', { form: this._form });
-	}
+	setSubmitDisabled(state: boolean) {
+    this.submitButton.disabled = state;
+  }
 
-	render(): HTMLElement {
-		return this.container;
-	}
+
+	setError(message: string) {
+    if (this.errorField) {
+      this.errorField.textContent = message;
+    }
+  }
+
 }

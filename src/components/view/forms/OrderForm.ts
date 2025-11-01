@@ -1,36 +1,72 @@
-import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/events';
+import { Form } from './Form';
+import { EventEmitter } from '../../base/Events';
+import { cloneTemplate, ensureElement } from '../../../utils/utils';
+import { selectors } from '../../../utils/constants';
+import { TPayment } from '../../../types';
 
-export class OrderForm extends Component<HTMLElement> {
-  protected _events: EventEmitter;
-  protected _form: HTMLFormElement;
-  protected _submitButton: HTMLButtonElement;
+export class OrderForm extends Form {
+  private readonly addressInput: HTMLInputElement;
+  private readonly paymentButtons: HTMLButtonElement[];
+  private readonly paymentField: HTMLInputElement;
+  private currentPayment: TPayment;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
-    super(container);
-    this._events = events;
+  constructor(events: EventEmitter) {
+    const template = ensureElement<HTMLTemplateElement>(selectors.order);
+    super(cloneTemplate<HTMLFormElement>(template), events);
 
-    this._form = container.querySelector('form') as HTMLFormElement;
-    this._submitButton = container.querySelector('[type="submit"]') as HTMLButtonElement;
+    this.addressInput = this.container.querySelector('input[name="address"]') as HTMLInputElement;
+    this.paymentButtons = Array.from(this.container.querySelectorAll('.order__buttons button'));
+    this.paymentField = this.container.querySelector('input[name="payment"]') as HTMLInputElement;
+    this.currentPayment = (this.paymentField.value as TPayment) || 'card';
 
-    this._handleSubmit = this._handleSubmit.bind(this);
-    this._form.addEventListener('submit', this._handleSubmit);
+    this.paymentButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        this.setPayment(button.name as TPayment);
+        this.events.emit('order:payment-change', { payment: this.currentPayment });
+      });
+    });
+
+    this.addressInput.addEventListener('input', () => {
+      this.events.emit('order:address-change', { address: this.addressInput.value });
+      this.updateSubmitState();
+    });
+
+    this.updatePaymentButtons();
+    this.updateSubmitState();
   }
 
-  protected _handleSubmit(event: SubmitEvent) {
-    event.preventDefault();
-    this._events.emit('form:submit', { form: this._form });
+  protected onSubmit(): void {
+    this.events.emit('order:submit');
   }
 
-  enableSubmit() {
-    this._submitButton.disabled = false;
+  setAddress(address: string) {
+    this.addressInput.value = address;
+    this.updateSubmitState();
   }
 
-  disableSubmit() {
-    this._submitButton.disabled = true;
+  setPayment(payment: TPayment) {
+    this.currentPayment = payment;
+    this.paymentField.value = payment;
+    this.updatePaymentButtons();
+    this.updateSubmitState();
   }
 
-  render(): HTMLElement {
-    return this.container;
+  getPayment(): TPayment {
+    return this.currentPayment;
+  }
+
+  getAddress(): string {
+    return this.addressInput.value.trim();
+  }
+
+  private updatePaymentButtons() {
+    this.paymentButtons.forEach(button => {
+      button.classList.toggle('button_active', button.name === this.currentPayment);
+    });
+  }
+
+   private updateSubmitState() {
+    const isValid = this.addressInput.value.trim().length > 0;
+    this.setSubmitDisabled(!isValid);
   }
 }

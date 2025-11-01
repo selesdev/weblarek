@@ -1,25 +1,26 @@
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/events';
+import { EventEmitter } from '../base/Events';
 
 export class Header extends Component<HTMLElement> {
-  private _events: EventEmitter;
-  private _counterEl: HTMLElement | null;
-  private _cartButton: HTMLElement | null;
+  private readonly events: EventEmitter;
+  private readonly counterElement: HTMLElement | null;
+  private readonly cartButton: HTMLElement | null;
 
   constructor(container: HTMLElement, events: EventEmitter) {
     super(container);
-    this._events = events;
+    this.events = events;
 
-    this._counterEl = this.container.querySelector('.header__basket-counter');
-    this._cartButton = this.container.querySelector('.header__basket');
-    this._cartButton?.addEventListener('click', () => {
-      this._events.emit('header:cart-open');
+    this.counterElement = this.container.querySelector('.header__basket-counter');
+    this.cartButton = this.container.querySelector('.header__basket');
+    this.cartButton?.addEventListener('click', () => {
+    this.events.emit('header:cart-open');
     });
   }
 
   setCounter(value: number) {
-    if (this._counterEl) {
-      this._counterEl.textContent = String(value);
+    if (this.counterElement) {
+      this.counterElement.textContent = String(value);
+      this.counterElement.classList.toggle('header__basket-counter_hidden', value === 0);
     }
   }
 

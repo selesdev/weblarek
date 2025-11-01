@@ -1,54 +1,54 @@
 import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/events';
-import { categoryMap } from '../../../utils/constants';
-
-interface IPreviewData {
-  title: string;
-  category: string;
-  text: string;
-  price: string;
-  image: string;
-}
+import { EventEmitter } from '../../base/Events';
+import { IProduct } from '../../../types';
+import { categoryMap, selectors } from '../../../utils/constants';
+import { cloneTemplate, ensureElement } from '../../../utils/utils';
 
 export class PreviewCard extends Component<HTMLElement> {
-  protected _events: EventEmitter;
-  protected _title: HTMLElement;
-  protected _category: HTMLElement;
-  protected _text: HTMLElement;
-  protected _price: HTMLElement;
-  protected _image: HTMLImageElement;
-  protected _button: HTMLButtonElement;
+  private readonly events: EventEmitter;
+  private readonly title: HTMLElement;
+  private readonly category: HTMLElement;
+  private readonly text: HTMLElement;
+  private readonly price: HTMLElement;
+  private readonly image: HTMLImageElement;
+  private readonly button: HTMLButtonElement;
+  private product: IProduct | null = null;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
-    super(container);
-    this._events = events;
+  constructor(events: EventEmitter) {
+    const template = ensureElement<HTMLTemplateElement>(selectors.cardPreview);
+    super(cloneTemplate<HTMLElement>(template));
+    this.events = events;
 
-    this._title = container.querySelector('.card__title') as HTMLElement;
-    this._category = container.querySelector('.card__category') as HTMLElement;
-    this._text = container.querySelector('.card__text') as HTMLElement;
-    this._price = container.querySelector('.card__price') as HTMLElement;
-    this._image = container.querySelector('.card__image') as HTMLImageElement;
-    this._button = container.querySelector('.card__button') as HTMLButtonElement;
+    this.title = this.container.querySelector('.card__title')!;
+    this.category = this.container.querySelector('.card__category')!;
+    this.text = this.container.querySelector('.card__text')!;
+    this.price = this.container.querySelector('.card__price')!;
+    this.image = this.container.querySelector('.card__image')!;
+    this.button = this.container.querySelector('.card__button')!;
 
-    this._button.addEventListener('click', () => {
-      this._events.emit('preview:add-to-basket', {
-        title: this._title.textContent,
-        price: this._price.textContent,
-      });
+    this.button.addEventListener('click', () => {
+      if (this.product && this.product.price !== null) {
+        this.events.emit('preview:buy');
+      }
     });
   }
 
-  setData(data: IPreviewData) {
-    this._title.textContent = data.title;
-    this._category.textContent = data.category;
-    this._category.className = `card__category ${categoryMap[data.category] || 'card__category_other'}`;
-    this._text.textContent = data.text;
-    this._price.textContent = data.price;
-    this._image.src = data.image;
-    this._image.alt = data.title;
+   setProduct(product: IProduct) {
+    this.product = product;
+    this.title.textContent = product.title;
+    this.text.textContent = product.description || '';
+    this.price.textContent = product.price !== null ? `${product.price} синапсов` : 'Бесценно';
+    this.image.src = product.image || '';
+    this.image.alt = product.title;
+
+    const categoryClass = (categoryMap as Record<string, string>)[product.category] || 'card__category_other';
+    this.category.className = `card__category ${categoryClass}`;
+    this.category.textContent = product.category;
+
+    this.button.disabled = product.price === null;
   }
 
-  render(): HTMLElement {
-    return this.container;
+  getProduct(): IProduct | null {
+    return this.product;
   }
 }

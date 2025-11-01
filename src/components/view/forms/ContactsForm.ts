@@ -1,36 +1,57 @@
-import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/events';
+import { Form } from './Form';
+import { EventEmitter } from '../../base/Events';
+import { cloneTemplate, ensureElement } from '../../../utils/utils';
+import { selectors } from '../../../utils/constants';
 
-export class ContactsForm extends Component<HTMLElement> {
-  protected _events: EventEmitter;
-  protected _form: HTMLFormElement;
-  protected _submitButton: HTMLButtonElement;
+export class ContactsForm extends Form {
+  private readonly emailInput: HTMLInputElement;
+  private readonly phoneInput: HTMLInputElement;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
-    super(container);
-    this._events = events;
 
-    this._form = container.querySelector('form') as HTMLFormElement;
-    this._submitButton = container.querySelector('[type="submit"]') as HTMLButtonElement;
+  constructor(events: EventEmitter) {
+    const template = ensureElement<HTMLTemplateElement>(selectors.contacts);
+    super(cloneTemplate<HTMLFormElement>(template), events);
 
-    this._handleSubmit = this._handleSubmit.bind(this);
-    this._form.addEventListener('submit', this._handleSubmit);
+    this.emailInput = this.container.querySelector('input[name="email"]') as HTMLInputElement;
+    this.phoneInput = this.container.querySelector('input[name="phone"]') as HTMLInputElement;
+
+    this.emailInput.addEventListener('input', () => {
+      this.events.emit('contacts:change', { field: 'email', value: this.emailInput.value });
+      this.updateSubmitState();
+    });
+
+    this.phoneInput.addEventListener('input', () => {
+      this.events.emit('contacts:change', { field: 'phone', value: this.phoneInput.value });
+      this.updateSubmitState();
+    });
+
+    this.updateSubmitState();
   }
 
-  protected _handleSubmit(event: SubmitEvent) {
-    event.preventDefault();
-    this._events.emit('form:submit', { form: this._form });
+  protected onSubmit(): void {
+    this.events.emit('contacts:submit');
   }
 
-  enableSubmit() {
-    this._submitButton.disabled = false;
+  setEmail(email: string) {
+    this.emailInput.value = email;
+    this.updateSubmitState();
   }
 
-  disableSubmit() {
-    this._submitButton.disabled = true;
+  setPhone(phone: string) {
+    this.phoneInput.value = phone;
+    this.updateSubmitState();
   }
 
-  render(): HTMLElement {
-    return this.container;
+  getEmail(): string {
+    return this.emailInput.value.trim();
+  }
+
+  getPhone(): string {
+    return this.phoneInput.value.trim();
+  }
+
+  private updateSubmitState() {
+    const isValid = this.emailInput.value.trim() !== '' && this.phoneInput.value.trim() !== '';
+    this.setSubmitDisabled(!isValid);
   }
 }
