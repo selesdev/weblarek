@@ -13,6 +13,8 @@ export class PreviewCard extends Component<HTMLElement> {
   private readonly image: HTMLImageElement;
   private readonly button: HTMLButtonElement;
   private product: IProduct | null = null;
+  private inBasket = false;
+
 
   constructor(events: EventEmitter) {
     const template = ensureElement<HTMLTemplateElement>(selectors.cardPreview);
@@ -27,13 +29,19 @@ export class PreviewCard extends Component<HTMLElement> {
     this.button = this.container.querySelector('.card__button')!;
 
     this.button.addEventListener('click', () => {
-      if (this.product && this.product.price !== null) {
+      if (!this.product || this.product.price === null) {
+        return;
+      }
+
+      if (this.inBasket) {
+        this.events.emit('preview:remove');
+      } else {
         this.events.emit('preview:buy');
       }
     });
   }
 
-   setProduct(product: IProduct) {
+   setProduct(product: IProduct, inBasket: boolean): void {
     this.product = product;
     this.title.textContent = product.title;
     this.text.textContent = product.description || '';
@@ -41,14 +49,33 @@ export class PreviewCard extends Component<HTMLElement> {
     this.image.src = product.image || '';
     this.image.alt = product.title;
 
-    const categoryClass = (categoryMap as Record<string, string>)[product.category] || 'card__category_other';
+    const categoryClass = categoryMap[product.category] ?? 'card__category_other';
     this.category.className = `card__category ${categoryClass}`;
     this.category.textContent = product.category;
 
-    this.button.disabled = product.price === null;
+    this.updateButtonState(inBasket);
+  }
+
+  setBasketState(inBasket: boolean): void {
+    if (!this.product) {
+      return;
+    }
+    this.updateButtonState(inBasket);
   }
 
   getProduct(): IProduct | null {
     return this.product;
+  }
+  private updateButtonState(inBasket: boolean): void {
+    this.inBasket = inBasket;
+
+    if (!this.product || this.product.price === null) {
+      this.button.disabled = true;
+      this.button.textContent = 'Недоступно';
+      return;
+    }
+
+    this.button.disabled = false;
+    this.button.textContent = inBasket ? 'Удалить из корзины' : 'Купить';
   }
 }

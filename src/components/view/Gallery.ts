@@ -11,11 +11,11 @@ export class Gallery extends Component<HTMLElement> {
     this.events = events;
   }
 
-  renderProducts(products: IProduct[]) {
+  renderProducts(products: IProduct[]):void {
     this.container.innerHTML = '';
 
     products.forEach(product => {
-       const card = new CatalogCard(this.events);
+      const card = new CatalogCard(this.events);
       card.setProduct(product);
       this.container.append(card.render());
     });

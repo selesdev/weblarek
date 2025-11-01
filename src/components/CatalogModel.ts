@@ -9,59 +9,57 @@ export interface IBasketChangePayload {
   total: number;
 }
  
- export class CatalogModel {
-  private productsStore = new Folder();
-  private cart = new Cart();
-  private buyer = new Buyer();
+export class CatalogModel {
+  private readonly productsStore = new Folder();
+  private readonly cart = new Cart();
+  private readonly buyer = new Buyer();
  
   constructor(private readonly events: EventEmitter) {}
  
-   setProducts(products: IProduct[]) {
+  setProducts(products: IProduct[]):void {
     this.productsStore.setItems(products);
     this.events.emit('model:products-changed', { products });
    }
  
-   getProducts(): IProduct[] {
+  getProducts(): IProduct[] {
     return this.productsStore.getItems();
    }
  
-   getProductById(id: string): IProduct | undefined {
+  getProductById(id: string): IProduct | undefined {
     return this.productsStore.getItemById(id);
    }
  
-  setSelectedProduct(product: IProduct | null) {
-    if (product) {
-      this.productsStore.setSelectedItem(product);
-    }
+  setSelectedProduct(product: IProduct | null): void {
+    this.productsStore.setSelectedItem(product);
     this.events.emit('model:selected-product-changed', { product });
    }
  
-   getSelectedProduct(): IProduct | null {
+  getSelectedProduct(): IProduct | null {
     return this.productsStore.getSelectedItem();
    }
  
-   addToBasket(product: IProduct) {
-    this.cart.addItem(product);
-    this.emitBasketChanges();
-   }
+  addToBasket(product: IProduct): void {
+    if (this.cart.hasItem(product.id)) {
+      return;
+    }}
  
-   removeFromBasket(index: number) {
+  removeFromBasket(index: number):void {
     this.cart.removeItemByIndex(index);
     this.emitBasketChanges();
   }
-  removeFromBasketById(id: string) {
+  removeFromBasketById(id: string):void {
     const index = this.cart.getItems().findIndex(item => item.id === id);
     if (index !== -1) {
       this.removeFromBasket(index);
     }
    }
  
-   clearBasket() {
+  clearBasket():void {
     this.cart.clear();
     this.emitBasketChanges();
    }
  
-   getBasket(): IProduct[] {
+  getBasket(): IProduct[] {
     return this.cart.getItems();
   }
 
@@ -69,21 +67,25 @@ export interface IBasketChangePayload {
     return this.cart.getTotalPrice();
   }
 
-  setBuyer(data: Partial<IBuyer>) {
+  isInBasket(id: string): boolean {
+    return this.cart.hasItem(id);
+  }
+
+  setBuyer(data: Partial<IBuyer>):void {
     this.buyer.setData(data);
     this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
  
-  clearBuyer() {
+  clearBuyer():void {
     this.buyer.clear();
     this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
  
-   getBuyer(): Partial<IBuyer> {
+  getBuyer(): Partial<IBuyer> {
     return this.buyer.getData();
   }
 
-  private emitBasketChanges() {
+  private emitBasketChanges():void {
    const items = this.cart.getItems();
     this.events.emit('model:basket-changed', {
       items,

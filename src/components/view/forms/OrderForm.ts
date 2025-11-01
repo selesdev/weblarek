@@ -39,12 +39,12 @@ export class OrderForm extends Form {
     this.events.emit('order:submit');
   }
 
-  setAddress(address: string) {
+  setAddress(address: string):void {
     this.addressInput.value = address;
     this.updateSubmitState();
   }
 
-  setPayment(payment: TPayment) {
+  setPayment(payment: TPayment):void {
     this.currentPayment = payment;
     this.paymentField.value = payment;
     this.updatePaymentButtons();
@@ -59,13 +59,13 @@ export class OrderForm extends Form {
     return this.addressInput.value.trim();
   }
 
-  private updatePaymentButtons() {
+  private updatePaymentButtons():void {
     this.paymentButtons.forEach(button => {
       button.classList.toggle('button_active', button.name === this.currentPayment);
     });
   }
 
-   private updateSubmitState() {
+   private updateSubmitState():void {
     const isValid = this.addressInput.value.trim().length > 0;
     this.setSubmitDisabled(!isValid);
   }

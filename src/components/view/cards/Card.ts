@@ -27,16 +27,16 @@ export class Card<T extends HTMLElement> extends Component<T> {
     });
   }
 
-  setData(data: IProduct) {
+  protected setData(data: IProduct): void {
     this.id = data.id;
     this.title.textContent = data.title;
     this.price.textContent = data.price !== null ? `${data.price} синапсов` : 'Бесценно';
     this.image.src = data.image || '';
     this.image.alt = data.title;
 
-    const categoryClass = (categoryMap as Record<string, string>)[data.category] || 'card__category_other';
+    const categoryClass = categoryMap[data.category] ?? 'card__category_other';
     this.category.className = `card__category ${categoryClass}`;
-
+    this.category.textContent = data.category;
     this.container.dataset.id = data.id;
   }
 

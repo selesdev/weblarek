@@ -29,7 +29,7 @@ export class BasketCard extends Component<HTMLLIElement> {
     });
   }
 
-  setProduct(product: IProduct, position: number) {
+  setProduct(product: IProduct, position: number):void {
     this.productId = product.id;
     this.index.textContent = String(position);
     this.title.textContent = product.title;

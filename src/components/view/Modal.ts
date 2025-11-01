@@ -15,20 +15,20 @@ export class Modal extends Component<HTMLElement> {
 
     this.closeButton.addEventListener('click', () => this.close());
     this.container.addEventListener('click', (event) => {
-    if (event.target === this.container) {
-      this.close();
-    }
+      if (event.target === this.container) {
+        this.close();
+      }
     });
   }
 
-  open(content: HTMLElement) {
+  open(content: HTMLElement):void {
     this.content.innerHTML = '';
     this.content.append(content);
     this.container.classList.add('modal_active');
     this.events.emit('modal:open');
   }
 
-  close() {
+  close():void {
     this.container.classList.remove('modal_active');
     this.content.innerHTML = '';
     this.events.emit('modal:close');

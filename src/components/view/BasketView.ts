@@ -27,7 +27,7 @@ export class BasketView extends Component<HTMLElement> {
     });
   }
 
-  setItems(items: IProduct[]) {
+  setItems(items: IProduct[]):void {
     this.list.innerHTML = '';
     items.forEach((item, index) => {
       const card = new BasketCard(this.events);
@@ -37,7 +37,7 @@ export class BasketView extends Component<HTMLElement> {
     this.orderButton.disabled = items.length === 0;
   }
 
-  setTotal(total: number) {
+  setTotal(total: number):void {
     this.total.textContent = `${total} синапсов`;
   }
 }

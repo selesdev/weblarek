@@ -19,7 +19,7 @@ export class Success extends Component<HTMLElement> {
   });
   }
 
- setMessage(message: string) {
+ setMessage(message: string):void {
     this.description.textContent = message;
   }
 }

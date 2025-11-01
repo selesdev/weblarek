@@ -7,7 +7,6 @@ export class ContactsForm extends Form {
   private readonly emailInput: HTMLInputElement;
   private readonly phoneInput: HTMLInputElement;
 
-
   constructor(events: EventEmitter) {
     const template = ensureElement<HTMLTemplateElement>(selectors.contacts);
     super(cloneTemplate<HTMLFormElement>(template), events);
@@ -32,12 +31,12 @@ export class ContactsForm extends Form {
     this.events.emit('contacts:submit');
   }
 
-  setEmail(email: string) {
+  setEmail(email: string):void {
     this.emailInput.value = email;
     this.updateSubmitState();
   }
 
-  setPhone(phone: string) {
+  setPhone(phone: string):void {
     this.phoneInput.value = phone;
     this.updateSubmitState();
   }
@@ -50,7 +49,7 @@ export class ContactsForm extends Form {
     return this.phoneInput.value.trim();
   }
 
-  private updateSubmitState() {
+  private updateSubmitState():void {
     const isValid = this.emailInput.value.trim() !== '' && this.phoneInput.value.trim() !== '';
     this.setSubmitDisabled(!isValid);
   }

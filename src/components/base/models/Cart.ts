@@ -17,13 +17,6 @@ export class Cart {
     }
   }
 
-  removeItem(item: IProduct): void {
-    const index = this.items.findIndex(i => i.id === item.id);
-    if (index !== -1) {
-      this.removeItemByIndex(index);
-    }
-  }
-
   clear(): void {
     this.items = [];
   }
@@ -37,6 +30,6 @@ export class Cart {
   }
 
   hasItem(id: string): boolean {
-    return this.items.some(i => i.id === id);
+    return this.items.some(item => item.id === id);
   }
 }

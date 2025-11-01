@@ -10,7 +10,6 @@ export class CatalogCard extends Card<HTMLButtonElement> {
     super(cloneTemplate<HTMLButtonElement>(template), events);
   }
 
-  setProduct(product: IProduct) {
+  setProduct(product: IProduct):void {
     this.setData(product);
-  }
-}
+  }}

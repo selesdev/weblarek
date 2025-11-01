@@ -17,11 +17,12 @@ export class Header extends Component<HTMLElement> {
     });
   }
 
-  setCounter(value: number) {
-    if (this.counterElement) {
-      this.counterElement.textContent = String(value);
-      this.counterElement.classList.toggle('header__basket-counter_hidden', value === 0);
+  setCounter(value: number): void {
+    if (!this.counterElement) {
+      return;
     }
+    this.counterElement.textContent = String(value);
+    this.counterElement.classList.toggle('header__basket-counter_hidden', value === 0);
   }
 
   render(): HTMLElement {
