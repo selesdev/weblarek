@@ -9,7 +9,7 @@ import { BasketView } from './view/BasketView';
 import { OrderForm } from './view/forms/OrderForm';
 import { ContactsForm } from './view/forms/ContactsForm';
 import { PreviewCard } from './view/cards/PreviewCard';
-import { IProduct, IOrderRequest, IOrderResponse, TPayment } from '../types';
+import { IProduct, IBuyer, TPayment } from '../types';
 import { CDN_URL } from '../utils/constants';
 
 type PresenterViews = {
@@ -150,8 +150,7 @@ export class AppPresenter {
   private async loadProducts(): Promise<void> {
     try {
       const response = await this.api.getProducts();
-      const list = Array.isArray(response) ? response : response.items;
-      const products = list
+      const products = response
         .map(item => this.mapProduct(item))
         .filter((item): item is IProduct => Boolean(item));
       this.model.setProducts(products);
@@ -196,7 +195,7 @@ export class AppPresenter {
     this.openContactsForm();
   }
 
-  private openContactsForm():void {
+  private openContactsForm(): void {
     this.contactsForm = new ContactsForm(this.events);
     const buyer = this.model.getBuyer();
 
@@ -226,18 +225,19 @@ export class AppPresenter {
       this.contactsForm.setError('Корзина пуста. Добавьте товары и повторите попытку.');
       return;
     }
-    const order: IOrderRequest = {
-      payment: this.model.getBuyer().payment ?? 'card',
-      address: this.model.getBuyer().address ?? '',
-      email,
-      phone,
-      items: items.map(item => ({ id: item.id, price: item.price ?? 0 })),
-      total: items.reduce((sum, item) => sum + (item.price ?? 0), 0),
-    };
-
+    
     try {
-      const result: IOrderResponse = await this.api.sendOrder(order);
-      const total = result.total ?? order.total;
+      const buyer = this.model.getBuyer();
+      const buyerData: IBuyer = {
+        payment: buyer.payment ?? 'card',
+        address: buyer.address ?? '',
+        email,
+        phone,
+      };
+
+      const total = items.reduce((sum, product) => sum + (product.price ?? 0), 0);
+
+      await this.api.sendOrder(buyerData, items);
       this.model.clearBasket();
       this.model.clearBuyer();
       this.views.success.setMessage(`Списано ${total} синапсов`);

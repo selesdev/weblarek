@@ -16,7 +16,7 @@ export class CatalogModel {
  
   constructor(private readonly events: EventEmitter) {}
  
-  setProducts(products: IProduct[]):void {
+  setProducts(products: IProduct[]): void {
     this.productsStore.setItems(products);
     this.events.emit('model:products-changed', { products });
    }
@@ -47,14 +47,21 @@ export class CatalogModel {
   }
  
   removeFromBasket(index: number):void {
-    this.cart.removeItemByIndex(index);
+    const items = this.cart.getItems();
+    if (index < 0 || index >= items.length) {
+      return;
+    }
+    this.cart.removeItem(items[index]);
     this.emitBasketChanges();
   }
-  removeFromBasketById(id: string):void {
-    const index = this.cart.getItems().findIndex(item => item.id === id);
-    if (index !== -1) {
-      this.removeFromBasket(index);
+  removeFromBasketById(id: string): void {
+    const item = this.cart.getItems().find(product => product.id === id);
+
+    if (!item) {
+      return;
     }
+    this.cart.removeItem(item);
+    this.emitBasketChanges();
    }
  
   clearBasket():void {
@@ -74,7 +81,7 @@ export class CatalogModel {
     return this.cart.hasItem(id);
   }
 
-  setBuyer(data: Partial<IBuyer>):void {
+  setBuyer(data: Partial<IBuyer>): void {
     this.buyer.setData(data);
     this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
