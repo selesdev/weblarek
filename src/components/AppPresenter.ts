@@ -73,7 +73,11 @@ export class AppPresenter {
 
   private registerUiEvents(): void {
     this.events.on('card:select', ({ id }: { id: string }) => {
-      const product = this.model.getProductById(id) ?? null;
+      const product = this.model.getProductById(id);
+      if (!product) {
+        console.warn(`Товар с идентификатором ${id} не найден`);
+        return;
+      }
       this.model.setSelectedProduct(product);
     });
 
@@ -144,6 +148,7 @@ export class AppPresenter {
       this.orderForm = null;
       this.contactsForm = null;
       this.preview = null;
+      this.model.setSelectedProduct(null);
     });
   }
 
@@ -176,7 +181,7 @@ export class AppPresenter {
     if (buyer.payment) {
       this.orderForm.setPayment(buyer.payment);
     } else {
-       this.model.setBuyer({ payment: this.orderForm.getPayment() });
+      this.model.setBuyer({ payment: this.orderForm.getPayment() });
     }
 
     this.views.modal.open(this.orderForm.render());
@@ -249,10 +254,10 @@ export class AppPresenter {
     }
   }
 
-    private mapProduct(raw: unknown): IProduct | null {
-      if (!raw || typeof raw !== 'object') {
-        return null;
-      }
+  private mapProduct(raw: unknown): IProduct | null {
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
 
     const source = raw as Record<string, unknown>;
     const id = typeof source.id === 'string' ? source.id.trim() : '';

@@ -13,30 +13,34 @@ export class CatalogModel {
   private readonly productsStore = new Folder();
   private readonly cart = new Cart();
   private readonly buyer = new Buyer();
+  private selectedProduct: IProduct | null = null;
  
   constructor(private readonly events: EventEmitter) {}
  
   setProducts(products: IProduct[]): void {
     this.productsStore.setItems(products);
     this.events.emit('model:products-changed', { products });
-   }
+  }
  
   getProducts(): IProduct[] {
     return this.productsStore.getItems();
-   }
+  }
  
   getProductById(id: string): IProduct | undefined {
     return this.productsStore.getItemById(id);
-   }
+  }
  
   setSelectedProduct(product: IProduct | null): void {
-    this.productsStore.setSelectedItem(product);
+    if (product) {
+      this.productsStore.setSelectedItem(product);
+    }
+    this.selectedProduct = product;
     this.events.emit('model:selected-product-changed', { product });
-   }
+  }
  
   getSelectedProduct(): IProduct | null {
-    return this.productsStore.getSelectedItem();
-   }
+    return this.selectedProduct;
+  }
  
   addToBasket(product: IProduct): void {
     if (this.cart.hasItem(product.id)) {
@@ -46,7 +50,7 @@ export class CatalogModel {
     this.emitBasketChanges();
   }
  
-  removeFromBasket(index: number):void {
+  removeFromBasket(index: number): void {
     const items = this.cart.getItems();
     if (index < 0 || index >= items.length) {
       return;
@@ -54,6 +58,7 @@ export class CatalogModel {
     this.cart.removeItem(items[index]);
     this.emitBasketChanges();
   }
+
   removeFromBasketById(id: string): void {
     const item = this.cart.getItems().find(product => product.id === id);
 
@@ -64,7 +69,7 @@ export class CatalogModel {
     this.emitBasketChanges();
    }
  
-  clearBasket():void {
+  clearBasket(): void {
     this.cart.clear();
     this.emitBasketChanges();
    }
@@ -86,7 +91,7 @@ export class CatalogModel {
     this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
  
-  clearBuyer():void {
+  clearBuyer(): void {
     this.buyer.clear();
     this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
@@ -95,7 +100,7 @@ export class CatalogModel {
     return this.buyer.getData();
   }
 
-  private emitBasketChanges():void {
+  private emitBasketChanges(): void {
    const items = this.cart.getItems();
     this.events.emit('model:basket-changed', {
       items,
