@@ -1,21 +1,24 @@
 import { Api } from '../Api';
-import { IOrderRequest, IOrderResponse, TProductResponse } from '../../../types';
+import { TProduct, TOrder,IBuyer,IProduct } from '../../../types';
 
-type OrderPayload = Omit<IOrderRequest, 'items'> & { items: string[] };
-
-export class ApiServer {
-  constructor(private readonly api: Api) {}
-
-  getProducts(): Promise<TProductResponse> {
-    return this.api.get<TProductResponse>('/product');
-  }
-
-  sendOrder(order: IOrderRequest): Promise<IOrderResponse> {
-    const payload: OrderPayload = {
-      ...order,
-      items: order.items.map(item => item.id),
-    };
-
-    return this.api.post<IOrderResponse>('/order', payload);
-  }
-}
+ 
+export class ApiServer { 
+  api:Api; 
+ 
+  constructor(api: Api) { 
+    this.api = api; 
+} 
+  async getProducts(): Promise<IProduct[]> { 
+    const response = await this.api.get<TProduct>('/product/'); 
+    return response.items; 
+  } 
+ 
+  // Отправка заказа на сервер 
+  sendOrder(buyerData: IBuyer, items: IProduct[]): void { 
+    const orderData: TOrder = { 
+      buyer: buyerData, 
+      items: items 
+    }; 
+    this.api.post('/order/', orderData); 
+  } 
+} 
