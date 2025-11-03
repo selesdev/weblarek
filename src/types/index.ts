@@ -6,28 +6,41 @@ export interface IApi {
     post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>; 
 } 
  
-export interface IProduct { 
-  id: string; 
-  description: string; 
-  image: string; 
-  title: string; 
-  category: string; 
-  price: number | null; 
-} 
- 
-export interface IBuyer { 
-  payment: TPayment; 
-  email: string; 
-  phone: string; 
-  address: string; 
-} 
- 
-export type TProduct = { 
-    items: IProduct[]; 
-} 
- 
-export type TOrder = { 
-    buyer: IBuyer; 
-    items: IProduct[]; 
-} 
- 
+export interface IProduct {
+  id: string;
+  description: string;
+  image: string;
+  title: string;
+  category: string;
+  price: number | null;
+}
+
+export interface IBasketChangePayload {
+  items: IProduct[];
+  total: number;
+}
+
+export interface IBuyer {
+  payment: TPayment;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface IProductListResponse {
+  items: IProduct[];
+}
+
+export interface IOrderRequest {
+  payment: TPayment;
+  email: string;
+  phone: string;
+  address: string;
+  total: number;
+  items: string[];
+}
+
+export interface IOrderResponse {
+  id: string;
+  total: number;
+}

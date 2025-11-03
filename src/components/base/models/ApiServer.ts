@@ -1,24 +1,16 @@
 import { Api } from '../Api';
-import { TProduct, TOrder,IBuyer,IProduct } from '../../../types';
+import { IProductListResponse, IOrderRequest, IOrderResponse } from '../../../types';
 
  
 export class ApiServer {
-  api:Api;
- 
-  constructor(api: Api) {
-    this.api = api;
-} 
-  async getProducts(): Promise<IProduct[]> {
-    const response = await this.api.get<TProduct>('/product/');
-    return response.items;
+  constructor(private readonly api: Api) {}
+
+  async getProducts(): Promise<IProductListResponse> {
+    return this.api.get<IProductListResponse>('/product/');
   }
  
   // Отправка заказа на сервер
-  sendOrder(buyerData: IBuyer, items: IProduct[]): void {
-    const orderData: TOrder = {
-      buyer: buyerData,
-      items: items
-    };
-    this.api.post('/order/', orderData);
+  async sendOrder(order: IOrderRequest): Promise<IOrderResponse> {
+    return this.api.post<IOrderResponse>('/order/', order);
   }
 }

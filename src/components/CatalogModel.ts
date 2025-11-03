@@ -4,22 +4,20 @@ import { Folder } from './base/models/Folder';
 import { Cart } from './base/models/Cart';
 import { Buyer } from './base/models/Buyer';
 
-export interface IBasketChangePayload {
-  items: IProduct[];
-  total: number;
-}
- 
 export class CatalogModel {
-  private readonly productsStore = new Folder();
-  private readonly cart = new Cart();
-  private readonly buyer = new Buyer();
+  private readonly productsStore:Folder;
+  private readonly cart:Cart;
+  private readonly buyer:Buyer;
   private selectedProduct: IProduct | null = null;
  
-  constructor(private readonly events: EventEmitter) {}
+  constructor(events: EventEmitter) {
+    this.productsStore = new Folder(events);
+    this.cart = new Cart(events);
+    this.buyer = new Buyer(events);
+  }
  
   setProducts(products: IProduct[]): void {
     this.productsStore.setItems(products);
-    this.events.emit('model:products-changed', { products });
   }
  
   getProducts(): IProduct[] {
@@ -33,9 +31,10 @@ export class CatalogModel {
   setSelectedProduct(product: IProduct | null): void {
     if (product) {
       this.productsStore.setSelectedItem(product);
+    } else {
+      this.productsStore.clearSelectedItem();
     }
     this.selectedProduct = product;
-    this.events.emit('model:selected-product-changed', { product });
   }
  
   getSelectedProduct(): IProduct | null {
@@ -47,7 +46,6 @@ export class CatalogModel {
       return;
     }
     this.cart.addItem(product);
-    this.emitBasketChanges();
   }
  
   removeFromBasket(index: number): void {
@@ -56,7 +54,6 @@ export class CatalogModel {
       return;
     }
     this.cart.removeItem(items[index]);
-    this.emitBasketChanges();
   }
 
   removeFromBasketById(id: string): void {
@@ -66,12 +63,10 @@ export class CatalogModel {
       return;
     }
     this.cart.removeItem(item);
-    this.emitBasketChanges();
    }
  
   clearBasket(): void {
     this.cart.clear();
-    this.emitBasketChanges();
    }
  
   getBasket(): IProduct[] {
@@ -88,23 +83,13 @@ export class CatalogModel {
 
   setBuyer(data: Partial<IBuyer>): void {
     this.buyer.setData(data);
-    this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
  
   clearBuyer(): void {
     this.buyer.clear();
-    this.events.emit('model:buyer-changed', { buyer: this.getBuyer() });
    }
  
   getBuyer(): Partial<IBuyer> {
     return this.buyer.getData();
   }
-
-  private emitBasketChanges(): void {
-   const items = this.cart.getItems();
-    this.events.emit('model:basket-changed', {
-      items,
-      total: this.cart.getTotalPrice(),
-    } satisfies IBasketChangePayload);
-   }
  }
