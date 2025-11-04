@@ -11,15 +11,11 @@ interface CatalogCardState {
 }
 
 export class CatalogCard extends Card<CatalogCardState> {
-  private readonly titleElement: HTMLElement;
-  private readonly priceElement: HTMLElement;
   private readonly imageElement: HTMLImageElement;
   private readonly categoryElement: HTMLElement;
 
   constructor(container: HTMLElement, events: IEvents) {
     super(container, events);
-    this.titleElement = this.container.querySelector('.card__title') as HTMLElement;
-    this.priceElement = this.container.querySelector('.card__price') as HTMLElement;
     this.imageElement = this.container.querySelector('.card__image') as HTMLImageElement;
     this.categoryElement = this.container.querySelector('.card__category') as HTMLElement;
 
@@ -28,13 +24,9 @@ export class CatalogCard extends Card<CatalogCardState> {
     });
   }
 
-  set title(value: string) {
-    this.titleElement.textContent = value;
+  override set title(value: string) {
+    super.title = value;
     this.imageElement.alt = value;
-  }
-
-  set price(value: number | null) {
-    this.priceElement.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
   }
 
   set image(src: string) {

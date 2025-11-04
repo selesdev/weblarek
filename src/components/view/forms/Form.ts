@@ -24,6 +24,7 @@ protected constructor(container: HTMLFormElement, events: IEvents) {
 
 	set valid(state: boolean) {
     this.submitButton.disabled = !state;
+    this.submitButton.toggleAttribute('disabled', !state);
   }
 
 

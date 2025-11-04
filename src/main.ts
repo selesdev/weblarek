@@ -17,7 +17,7 @@ import { CatalogCard } from './components/view/cards/CatalogCard';
 import { BasketCard } from './components/view/cards/BasketCard';
 import { API_URL, CDN_URL, selectors } from './utils/constants';
 import { ensureElement, cloneTemplate } from './utils/utils';
-import { IBuyer, IProduct, IOrderRequest } from './types';
+import { IBuyer, IProduct, IOrderRequest,  TPayment } from './types';
 
 const events = new EventEmitter();
 const api = new Api(API_URL);
@@ -37,6 +37,7 @@ const previewTemplate = ensureElement<HTMLTemplateElement>(selectors.cardPreview
 const catalogCardTemplate = ensureElement<HTMLTemplateElement>(selectors.cardCatalog);
 const basketCardTemplate = ensureElement<HTMLTemplateElement>(selectors.cardBasket);
 const success = new Success(cloneTemplate<HTMLElement>(successTemplate), events);
+const DEFAULT_PAYMENT: TPayment = 'card';
 const basketView = new BasketView(cloneTemplate<HTMLElement>(basketTemplate), events);
 const orderForm = new OrderForm(cloneTemplate<HTMLFormElement>(orderTemplate), events);
 const contactsForm = new ContactsForm(cloneTemplate<HTMLFormElement>(contactsTemplate), events);
@@ -201,26 +202,25 @@ function renderBasket(items: IProduct[], total: number): void {
 }
 
   function openBasket(): void {
-  renderBasket(basket.getItems(), basket.getTotalPrice());
   modal.open(basketView.element);
 }
 
   function openOrderForm(): void {
   const buyerData = buyer.getData();
+  const { valid, error } = getOrderValidationState();
   const element = orderForm.render({
     address: buyerData.address ?? '',
-    payment: buyerData.payment ?? 'card',
-    valid: isOrderStepValid(),
-    error: '',
+    payment: buyerData.payment ?? DEFAULT_PAYMENT,
+    valid,
+    error,
   });
   modal.open(element);
 }
 
 function handleOrderSubmit(): void {
-  const errors = buyer.validate(['address', 'payment']);
-  if (Object.keys(errors).length > 0) {
-    const message = errors.address ?? errors.payment ?? '';
-    orderForm.render({ error: message, valid: false });
+  const { valid, error } = getOrderValidationState();
+  if (!valid) {
+    orderForm.render({ error, valid });
     return;
   }
 
@@ -229,20 +229,20 @@ function handleOrderSubmit(): void {
 
 function openContactsForm(): void {
   const buyerData = buyer.getData();
+  const { valid, error } = getContactsValidationState();
   const element = contactsForm.render({
     email: buyerData.email ?? '',
     phone: buyerData.phone ?? '',
-    valid: isContactsStepValid(),
-    error: '',
+    valid,
+    error,
   });
   modal.open(element);
 }
 
   async function handleContactsSubmit(): Promise<void> {
-  const errors = buyer.validate(['email', 'phone']);
-  if (Object.keys(errors).length > 0) {
-    const message = errors.email ?? errors.phone ?? '';
-    contactsForm.render({ error: message, valid: false });
+  const { valid, error } = getContactsValidationState();
+  if (!valid) {
+    contactsForm.render({ error, valid });
     return;
   }
 
@@ -261,7 +261,7 @@ async function submitOrder(): Promise<void> {
 
   const buyerData = buyer.getData();
   const order: IOrderRequest = {
-    payment: buyerData.payment ?? 'card',
+    payment: buyerData.payment ?? DEFAULT_PAYMENT,
     address: buyerData.address ?? '',
     email: buyerData.email ?? '',
     phone: buyerData.phone ?? '',
@@ -279,7 +279,7 @@ async function submitOrder(): Promise<void> {
     modal.open(element);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Не удалось оформить заказ';
-    contactsForm.render({ error: message });
+    contactsForm.render({ error: message, valid: false });
   }
 }
 
@@ -293,34 +293,44 @@ async function submitOrder(): Promise<void> {
 }
 
   function syncBuyerState(buyerData: Partial<IBuyer>): void {
-  const orderValid = isOrderStepValid();
+  if (!buyerData.payment) {
+    buyer.setData({ payment: DEFAULT_PAYMENT });
+    return;
+  }
+
+  const payment = buyerData.payment ?? DEFAULT_PAYMENT;
+  const { valid: orderValid, error: orderError } = getOrderValidationState();
   orderForm.render({
     address: buyerData.address ?? '',
-    payment: buyerData.payment ?? 'card',
+    payment,
     valid: orderValid,
-    ...(orderValid ? { error: '' } : {}),
+    error: orderError,
   });
 
-  const contactsValid = isContactsStepValid();
+  const { valid: contactsValid, error: contactsError } = getContactsValidationState();
   contactsForm.render({
     email: buyerData.email ?? '',
     phone: buyerData.phone ?? '',
     valid: contactsValid,
-    ...(contactsValid ? { error: '' } : {}),
+    error: contactsError,
   });
-}
-
-function isOrderStepValid(): boolean {
-  return Object.keys(buyer.validate(['address', 'payment'])).length === 0;
-}
-
-function isContactsStepValid(): boolean {
-  return Object.keys(buyer.validate(['email', 'phone'])).length === 0;
 }
 
 function closeModal(): void {
   modal.close();
   catalog.clearSelectedItem();
+}
+
+function getOrderValidationState(): { valid: boolean; error: string } {
+  const errors = buyer.validate(['address', 'payment']);
+  const message = errors.address ?? errors.payment ?? '';
+  return { valid: Object.keys(errors).length === 0, error: message };
+}
+
+function getContactsValidationState(): { valid: boolean; error: string } {
+  const errors = buyer.validate(['email', 'phone']);
+  const message = errors.email ?? errors.phone ?? '';
+  return { valid: Object.keys(errors).length === 0, error: message };
 }
 
 function mapProduct(raw: unknown): IProduct | null {

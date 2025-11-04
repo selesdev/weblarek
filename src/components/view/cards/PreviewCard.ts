@@ -14,19 +14,15 @@ interface PreviewCardState {
 
 
   export class PreviewCard extends Card<PreviewCardState> {
-  private readonly titleElement: HTMLElement;
   private readonly categoryElement: HTMLElement;
   private readonly descriptionElement: HTMLElement;
-  private readonly priceElement: HTMLElement;
   private readonly imageElement: HTMLImageElement;
   private readonly button: HTMLButtonElement;
 
     constructor(container: HTMLElement, events: IEvents) {
     super(container, events);
-    this.titleElement = this.container.querySelector('.card__title') as HTMLElement;
     this.categoryElement = this.container.querySelector('.card__category') as HTMLElement;
     this.descriptionElement = this.container.querySelector('.card__text') as HTMLElement;
-    this.priceElement = this.container.querySelector('.card__price') as HTMLElement;
     this.imageElement = this.container.querySelector('.card__image') as HTMLImageElement;
     this.button = this.container.querySelector('.card__button') as HTMLButtonElement;
 
@@ -40,8 +36,8 @@ interface PreviewCardState {
     });
   }
 
-   set title(value: string) {
-    this.titleElement.textContent = value;
+   override set title(value: string) {
+    super.title = value;
     this.imageElement.alt = value;
   }
 
@@ -56,15 +52,14 @@ interface PreviewCardState {
     this.descriptionElement.textContent = value;
   }
 
-  set price(value: number | null) {
+  override set price(value: number | null) {
+    super.price = value;
     if (value === null) {
-      this.priceElement.textContent = 'Бесценно';
       this.button.disabled = true;
       this.button.textContent = 'Недоступно';
       this.button.classList.remove('card__button_remove');
       return;
     }
-    this.priceElement.textContent = `${value} синапсов`;
     this.button.disabled = false;
     if (!this.button.classList.contains('card__button_remove')) {
       this.button.textContent = 'В корзину';
