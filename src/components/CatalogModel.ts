@@ -1,8 +1,8 @@
 import { EventEmitter } from './base/Events';
 import { IProduct, IBuyer } from '../types';
-import { Folder } from './base/models/Folder';
-import { Cart } from './base/models/Cart';
-import { Buyer } from './base/models/Buyer';
+import { Folder } from './models/Folder';
+import { Cart } from './models/Cart';
+import { Buyer } from './models/Buyer';
 
 export class CatalogModel {
   private readonly productsStore:Folder;

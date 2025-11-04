@@ -1,81 +1,86 @@
-import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/Events';
-import { IProduct } from '../../../types';
-import { categoryMap, selectors } from '../../../utils/constants';
-import { cloneTemplate, ensureElement } from '../../../utils/utils';
+import { Card } from './Card';
+import { IEvents } from '../../base/Events';
+import { categoryMap } from '../../../utils/constants';
 
-export class PreviewCard extends Component<HTMLElement> {
-  private readonly events: EventEmitter;
-  private readonly title: HTMLElement;
-  private readonly category: HTMLElement;
-  private readonly text: HTMLElement;
-  private readonly price: HTMLElement;
-  private readonly image: HTMLImageElement;
+interface PreviewCardState {
+  id: string;
+  title: string;
+  description: string;
+  price: number | null;
+  image: string;
+  category: string;
+  inBasket: boolean;
+}
+
+
+  export class PreviewCard extends Card<PreviewCardState> {
+  private readonly titleElement: HTMLElement;
+  private readonly categoryElement: HTMLElement;
+  private readonly descriptionElement: HTMLElement;
+  private readonly priceElement: HTMLElement;
+  private readonly imageElement: HTMLImageElement;
   private readonly button: HTMLButtonElement;
-  private product: IProduct | null = null;
-  private inBasket = false;
 
-
-  constructor(events: EventEmitter) {
-    const template = ensureElement<HTMLTemplateElement>(selectors.cardPreview);
-    super(cloneTemplate<HTMLElement>(template));
-    this.events = events;
-
-    this.title = this.container.querySelector('.card__title')!;
-    this.category = this.container.querySelector('.card__category')!;
-    this.text = this.container.querySelector('.card__text')!;
-    this.price = this.container.querySelector('.card__price')!;
-    this.image = this.container.querySelector('.card__image')!;
-    this.button = this.container.querySelector('.card__button')!;
+    constructor(container: HTMLElement, events: IEvents) {
+    super(container, events);
+    this.titleElement = this.container.querySelector('.card__title') as HTMLElement;
+    this.categoryElement = this.container.querySelector('.card__category') as HTMLElement;
+    this.descriptionElement = this.container.querySelector('.card__text') as HTMLElement;
+    this.priceElement = this.container.querySelector('.card__price') as HTMLElement;
+    this.imageElement = this.container.querySelector('.card__image') as HTMLImageElement;
+    this.button = this.container.querySelector('.card__button') as HTMLButtonElement;
 
     this.button.addEventListener('click', () => {
-      if (!this.product || this.product.price === null) {
+      if (this.button.disabled) {
         return;
       }
 
-      if (this.inBasket) {
-        this.events.emit('preview:remove');
-      } else {
-        this.events.emit('preview:buy');
-      }
+      const action = this.button.classList.contains('card__button_remove') ? 'preview:remove' : 'preview:buy';
+      this.emit(action);
     });
   }
 
-   setProduct(product: IProduct, inBasket: boolean): void {
-    this.product = product;
-    this.title.textContent = product.title;
-    this.text.textContent = product.description || '';
-    this.price.textContent = product.price !== null ? `${product.price} синапсов` : 'Бесценно';
-    this.image.src = product.image || '';
-    this.image.alt = product.title;
-
-    const categoryClass = categoryMap[product.category] ?? 'card__category_other';
-    this.category.className = `card__category ${categoryClass}`;
-    this.category.textContent = product.category;
-
-    this.updateButtonState(inBasket);
+   set title(value: string) {
+    this.titleElement.textContent = value;
+    this.imageElement.alt = value;
   }
 
-  setBasketState(inBasket: boolean): void {
-    if (!this.product) {
-      return;
-    }
-    this.updateButtonState(inBasket);
+
+    set category(value: string) {
+    const modifier = categoryMap[value] ?? 'card__category_other';
+    this.categoryElement.className = `card__category ${modifier}`;
+    this.categoryElement.textContent = value;
   }
 
-  getProduct(): IProduct | null {
-    return this.product;
+    set description(value: string) {
+    this.descriptionElement.textContent = value;
   }
-  private updateButtonState(inBasket: boolean): void {
-    this.inBasket = inBasket;
 
-    if (!this.product || this.product.price === null) {
+  set price(value: number | null) {
+    if (value === null) {
+      this.priceElement.textContent = 'Бесценно';
       this.button.disabled = true;
       this.button.textContent = 'Недоступно';
+      this.button.classList.remove('card__button_remove');
+      return;
+    }
+    this.priceElement.textContent = `${value} синапсов`;
+    this.button.disabled = false;
+    if (!this.button.classList.contains('card__button_remove')) {
+      this.button.textContent = 'В корзину';
+    }
+  }
+
+  set image(src: string) {
+    this.imageElement.src = src;
+  }
+
+  set inBasket(value: boolean) {
+    if (this.button.disabled) {
       return;
     }
 
-    this.button.disabled = false;
-    this.button.textContent = inBasket ? 'Удалить из корзины' : 'Купить';
+    this.button.classList.toggle('card__button_remove', value);
+    this.button.textContent = value ? 'Удалить из корзины' : 'В корзину';
   }
 }

@@ -1,12 +1,16 @@
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/Events';
+import { IEvents } from '../base/Events';
 
-export class Header extends Component<HTMLElement> {
-  private readonly events: EventEmitter;
+interface HeaderState {
+  counter: number;
+}
+
+export class Header extends Component<HeaderState> {
+  private readonly events: IEvents;
   private readonly counterElement: HTMLElement | null;
   private readonly cartButton: HTMLElement | null;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
+  constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events;
 
@@ -17,15 +21,11 @@ export class Header extends Component<HTMLElement> {
     });
   }
 
-  setCounter(value: number): void {
+  set counter(value: number) {
     if (!this.counterElement) {
       return;
     }
     this.counterElement.textContent = String(value);
     this.counterElement.classList.toggle('header__basket-counter_hidden', value === 0);
-  }
-
-  render(): HTMLElement {
-    return this.container;
   }
 }

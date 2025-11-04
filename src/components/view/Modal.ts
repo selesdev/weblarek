@@ -1,36 +1,44 @@
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/Events';
+import { IEvents } from '../base/Events';
+import { ensureElement } from '../../utils/utils';
 
-export class Modal extends Component<HTMLElement> {
-  private readonly events: EventEmitter;
+interface ModalState {
+  content: HTMLElement;
+}
+
+export class Modal extends Component<ModalState> {
+  private readonly events: IEvents;
   private readonly closeButton: HTMLElement;
-  private readonly content: HTMLElement;
+  private readonly contentContainer: HTMLElement;
 
-  constructor(container: HTMLElement, events: EventEmitter) {
+  constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events;
+    this.closeButton = ensureElement<HTMLElement>('.modal__close', container);
+    this.contentContainer = ensureElement<HTMLElement>('.modal__content', container);
 
-    this.closeButton = this.container.querySelector('.modal__close')!;
-    this.content = this.container.querySelector('.modal__content')!;
+    this.closeButton.addEventListener('click', () => {
+    this.events.emit('modal:close');
+    });
 
-    this.closeButton.addEventListener('click', () => this.close());
-    this.container.addEventListener('click', (event) => {
+    this.container.addEventListener('click', event => {
       if (event.target === this.container) {
-        this.close();
+        this.events.emit('modal:close');
       }
     });
   }
 
-  open(content: HTMLElement):void {
-    this.content.innerHTML = '';
-    this.content.append(content);
+  set content(element: HTMLElement) {
+    this.contentContainer.replaceChildren(element);
     this.container.classList.add('modal_active');
-    this.events.emit('modal:open');
   }
 
-  close():void {
+  open(element: HTMLElement): void {
+    this.content = element;
+  }
+
+  close(): void {
     this.container.classList.remove('modal_active');
-    this.content.innerHTML = '';
-    this.events.emit('modal:close');
+    this.contentContainer.replaceChildren();
   }
 }

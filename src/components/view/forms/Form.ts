@@ -1,18 +1,20 @@
 import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/Events';
+import { IEvents } from '../../base/Events';
 
-export abstract class Form extends Component<HTMLFormElement> {
-  protected readonly events: EventEmitter;
-  protected readonly submitButton: HTMLButtonElement;
-  protected readonly errorField: HTMLElement | null;
+export abstract class Form<T> extends Component<T> {
+  protected readonly events: IEvents;
+  protected readonly form: HTMLFormElement;
+  private readonly submitButton: HTMLButtonElement;
+  private readonly errorField: HTMLElement | null;
 
-constructor(container: HTMLFormElement, events: EventEmitter) {
+protected constructor(container: HTMLFormElement, events: IEvents) {
     super(container);
     this.events = events;
-    this.submitButton = this.container.querySelector('[type="submit"]') as HTMLButtonElement;
-    this.errorField = this.container.querySelector('.form__errors');
+    this.form = container;
+    this.submitButton = this.form.querySelector('[type="submit"]') as HTMLButtonElement;
+    this.errorField = this.form.querySelector('.form__errors');
 
-    this.container.addEventListener('submit', (event) => {
+    this.form.addEventListener('submit', event => {
       event.preventDefault();
       this.onSubmit();
     });
@@ -20,13 +22,14 @@ constructor(container: HTMLFormElement, events: EventEmitter) {
 
   protected abstract onSubmit(): void;
 
-	protected setSubmitDisabled(state: boolean):void {
-    this.submitButton.disabled = state;
+	set valid(state: boolean) {
+    this.submitButton.disabled = !state;
   }
 
 
-	setError(message: string):void {
+	set error(message: string) {
     if (this.errorField) {
       this.errorField.textContent = message;
     }
-  }}
+  }
+}

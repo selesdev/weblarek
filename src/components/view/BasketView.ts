@@ -1,23 +1,22 @@
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/Events';
-import { IProduct } from '../../types';
-import { selectors } from '../../utils/constants';
-import { cloneTemplate, ensureElement } from '../../utils/utils';
-import { BasketCard } from './cards/BasketCard';
+import { IEvents } from '../base/Events';
 
-export class BasketView extends Component<HTMLElement> {
-  private readonly events: EventEmitter;
+interface BasketViewState {
+  items: HTMLElement[];
+  total: string;
+}
+
+export class BasketView extends Component<BasketViewState> {
+  private readonly events: IEvents;
   private readonly list: HTMLElement;
-  private readonly total: HTMLElement;
+  private readonly totalField: HTMLElement;
   private readonly orderButton: HTMLButtonElement;
 
-  constructor(events: EventEmitter) {
-    const template = ensureElement<HTMLTemplateElement>(selectors.basket);
-    super(cloneTemplate<HTMLElement>(template));
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container);
     this.events = events;
-
     this.list = this.container.querySelector('.basket__list') as HTMLElement;
-    this.total = this.container.querySelector('.basket__price') as HTMLElement;
+    this.totalField = this.container.querySelector('.basket__price') as HTMLElement;
     this.orderButton = this.container.querySelector('.basket__button') as HTMLButtonElement;
 
     this.orderButton.addEventListener('click', () => {
@@ -27,17 +26,12 @@ export class BasketView extends Component<HTMLElement> {
     });
   }
 
-  setItems(items: IProduct[]):void {
-    this.list.innerHTML = '';
-    items.forEach((item, index) => {
-      const card = new BasketCard(this.events);
-      card.setProduct(item, index + 1);
-      this.list.append(card.render());
-    });
-    this.orderButton.disabled = items.length === 0;
+  set items(elements: HTMLElement[]) {
+    this.list.replaceChildren(...elements);
+    this.orderButton.disabled = elements.length === 0;
   }
 
-  setTotal(total: number):void {
-    this.total.textContent = `${total} синапсов`;
+  set total(value: string) {
+    this.totalField.textContent = value;
   }
 }

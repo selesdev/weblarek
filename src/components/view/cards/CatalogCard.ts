@@ -1,15 +1,49 @@
 import { Card } from './Card';
-import { EventEmitter } from '../../base/Events';
-import { IProduct } from '../../../types';
-import { cloneTemplate, ensureElement } from '../../../utils/utils';
-import { selectors } from '../../../utils/constants';
+import { IEvents } from '../../base/Events';
+import { categoryMap } from '../../../utils/constants';
 
-export class CatalogCard extends Card<HTMLButtonElement> {
-  constructor(events: EventEmitter) {
-    const template = ensureElement<HTMLTemplateElement>(selectors.cardCatalog);
-    super(cloneTemplate<HTMLButtonElement>(template), events);
+interface CatalogCardState {
+  id: string;
+  title: string;
+  price: number | null;
+  image: string;
+  category: string;
+}
+
+export class CatalogCard extends Card<CatalogCardState> {
+  private readonly titleElement: HTMLElement;
+  private readonly priceElement: HTMLElement;
+  private readonly imageElement: HTMLImageElement;
+  private readonly categoryElement: HTMLElement;
+
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container, events);
+    this.titleElement = this.container.querySelector('.card__title') as HTMLElement;
+    this.priceElement = this.container.querySelector('.card__price') as HTMLElement;
+    this.imageElement = this.container.querySelector('.card__image') as HTMLImageElement;
+    this.categoryElement = this.container.querySelector('.card__category') as HTMLElement;
+
+    this.container.addEventListener('click', () => {
+      this.emit('card:select');
+    });
   }
 
-  setProduct(product: IProduct):void {
-    this.setData(product);
-  }}
+  set title(value: string) {
+    this.titleElement.textContent = value;
+    this.imageElement.alt = value;
+  }
+
+  set price(value: number | null) {
+    this.priceElement.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
+  }
+
+  set image(src: string) {
+    this.imageElement.src = src;
+  }
+
+  set category(value: string) {
+    const modifier = categoryMap[value] ?? 'card__category_other';
+    this.categoryElement.className = `card__category ${modifier}`;
+    this.categoryElement.textContent = value;
+  }
+}

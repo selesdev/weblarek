@@ -1,23 +1,23 @@
-import { EventEmitter } from '../Events';
-import { IProduct } from '../../../types';
+import { IEvents } from '../base/Events';
+import { IProduct } from '../../types';
 
 export class Folder {
   private items: IProduct[] = [];
   private selectedItem: IProduct | null = null;
 
   constructor(
-    private readonly events?: EventEmitter,
+    private readonly events?: IEvents,  
     private readonly itemsEvent = 'model:products-changed',
     private readonly selectedEvent = 'model:selected-product-changed'
   ) {}
 
   setItems(items: IProduct[]): void {
-    this.items = items;
+    this.items = [...items];
     this.emitItemsChange();
   }
 
   getItems(): IProduct[] {
-    return this.items;
+    return [...this.items];
   }
 
   getItemById(id: string): IProduct | undefined {
@@ -30,6 +30,9 @@ export class Folder {
   }
 
   clearSelectedItem(): void {
+    if (!this.selectedItem) {
+      return;
+    }
     this.selectedItem = null;
     this.emitSelectedChange();
   }
@@ -39,10 +42,10 @@ export class Folder {
   }
 
   private emitItemsChange(): void {
-    this.events?.emit<{ products: IProduct[] }>(this.itemsEvent, { products: this.getItems() });
+    this.events?.emit(this.itemsEvent, { products: this.getItems()});
   }
 
   private emitSelectedChange(): void {
-    this.events?.emit<{ product: IProduct | null }>(this.selectedEvent, { product: this.getSelectedItem() });
+    this.events?.emit(this.selectedEvent, { product: this.getSelectedItem()});
   }
 }

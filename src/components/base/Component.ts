@@ -17,6 +17,18 @@ export abstract class Component<T> {
             } 
         } 
     } 
+
+    protected toggleModifier(element: HTMLElement, className: string, enabled: boolean): void {
+        
+    element.classList.toggle(className, enabled);
+
+    }
+
+    get element(): HTMLElement {
+
+    return this.container;
+
+    }
  
     // Вернуть корневой DOM-элемент 
     render(data?: Partial<T>): HTMLElement { 

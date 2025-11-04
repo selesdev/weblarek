@@ -1,38 +1,39 @@
-import { Component } from '../../base/Component';
-import { EventEmitter } from '../../base/Events';
-import { IProduct } from '../../../types';
-import { cloneTemplate, ensureElement } from '../../../utils/utils';
-import { selectors } from '../../../utils/constants';
+import { Card } from './Card';
+import { IEvents } from '../../base/Events';
 
-export class BasketCard extends Component<HTMLLIElement> {
-  private readonly events: EventEmitter;
+interface BasketCardState {
+  id: string;
+  title: string;
+  price: number | null;
+  index: number;
+}
+
+  export class BasketCard extends Card<BasketCardState> {
   private readonly deleteButton: HTMLButtonElement;
-  private readonly title: HTMLElement;
-  private readonly price: HTMLElement;
-  private readonly index: HTMLElement;
-  private productId: string | null = null;
-
-  constructor(events: EventEmitter) {
-    const template = ensureElement<HTMLTemplateElement>(selectors.cardBasket);
-    super(cloneTemplate<HTMLLIElement>(template));
-    this.events = events;
-
+  private readonly titleElement: HTMLElement;
+  private readonly priceElement: HTMLElement;
+  private readonly indexElement: HTMLElement;
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container, events);
     this.deleteButton = this.container.querySelector('.basket__item-delete') as HTMLButtonElement;
-    this.title = this.container.querySelector('.card__title') as HTMLElement;
-    this.price = this.container.querySelector('.card__price') as HTMLElement;
-    this.index = this.container.querySelector('.basket__item-index') as HTMLElement;
+    this.titleElement = this.container.querySelector('.card__title') as HTMLElement;
+    this.priceElement = this.container.querySelector('.card__price') as HTMLElement;
+    this.indexElement = this.container.querySelector('.basket__item-index') as HTMLElement;
 
     this.deleteButton.addEventListener('click', () => {
-      if (this.productId) {
-        this.events.emit('basket:item-remove', { id: this.productId });
-      }
+      this.emit('basket:item-remove');
     });
   }
 
-  setProduct(product: IProduct, position: number):void {
-    this.productId = product.id;
-    this.index.textContent = String(position);
-    this.title.textContent = product.title;
-    this.price.textContent = product.price !== null ? `${product.price} синапсов` : 'Бесценно';
+  set title(value: string) {
+    this.titleElement.textContent = value;
+  }
+
+  set price(value: number | null) {
+    this.priceElement.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
+  }
+
+  set index(value: number) {
+    this.indexElement.textContent = String(value);
   }
 }
